@@ -123,9 +123,17 @@ SKILL_DESCS["pagespeed-optimizer-alexlivre"]="Universal AI agent skill to optimi
 SKILL_CATS["pagespeed-optimizer-alexlivre"]="Performance & SEO"
 SKILL_CMDS["pagespeed-optimizer-alexlivre"]="npx skills add alexlivre/pagespeed-optimizer-alexlivre -g -y"
 
-# If registry.json exists and node is available, enrich metadata
+# If registry.json exists and node is available, enrich metadata (or fetch remotely if running via curl one-liner)
 REGISTRY_FILE="$SCRIPT_DIR/registry.json"
 CATALOG_SKILLS=("pagespeed-optimizer-alexlivre")
+
+if [[ ! -f "$REGISTRY_FILE" ]]; then
+  REMOTE_REG_URL="https://raw.githubusercontent.com/alexlivre/skills-alexlivre/main/registry.json"
+  TEMP_REG="$(mktemp 2>/dev/null || mktemp -t "registry.json")"
+  if curl -fsSL "$REMOTE_REG_URL" -o "$TEMP_REG" 2>/dev/null; then
+    REGISTRY_FILE="$TEMP_REG"
+  fi
+fi
 
 if [[ -f "$REGISTRY_FILE" && -x "$(command -v node 2>/dev/null)" ]]; then
   EXTRACTED_NAMES="$(node -e "
@@ -375,7 +383,7 @@ EOF
         fi
       else
         mkdir -p "$dest"
-        cp -R "$skill_src"/* "$dest/"
+        cp -R "$skill_src/." "$dest/"
         echo -e "   ${GREEN}[+] Installed for $cli ->${NC} $dest"
         SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
       fi

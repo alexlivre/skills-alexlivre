@@ -105,9 +105,11 @@ if (-not $ScriptDir) {
     $ScriptDir = Get-Location
 }
 
-# Load registry.json if available
+# Load registry.json if available, or fetch from remote GitHub repository
 $RegistryFile = Join-Path $ScriptDir "registry.json"
 $RegistrySkills = @()
+$RemoteRegistryUrl = "https://raw.githubusercontent.com/alexlivre/skills-alexlivre/main/registry.json"
+
 if (Test-Path $RegistryFile) {
     try {
         $RegData = Get-Content $RegistryFile -Raw | ConvertFrom-Json
@@ -115,8 +117,33 @@ if (Test-Path $RegistryFile) {
             $RegistrySkills = $RegData.skills
         }
     } catch {
-        Write-Warning "Could not parse registry.json: $_"
+        Write-Warning "Could not parse local registry.json: $_"
     }
+} else {
+    try {
+        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12 -bor [System.Net.SecurityProtocolType]::Tls13
+        $RegData = Invoke-RestMethod -Uri $RemoteRegistryUrl -UseBasicParsing
+        if ($RegData.skills) {
+            $RegistrySkills = $RegData.skills
+        }
+    } catch {
+        Write-Warning "Could not fetch remote registry.json: $_"
+    }
+}
+
+# Resilient fallback if both local and remote registry.json fail
+if ($RegistrySkills.Count -eq 0) {
+    $RegistrySkills = @(
+        [PSCustomObject]@{
+            name           = "pagespeed-optimizer-alexlivre"
+            description    = "Universal AI agent skill to analyze, audit, and optimize web applications to 100/100 on PageSpeed Insights & Google Lighthouse 13+ across Performance, Accessibility (WCAG 2.2 AA), Best Practices, SEO, and GEO."
+            repo           = "https://github.com/alexlivre/pagespeed-optimizer-alexlivre"
+            gitUrl         = "https://github.com/alexlivre/pagespeed-optimizer-alexlivre.git"
+            zipUrl         = "https://github.com/alexlivre/pagespeed-optimizer-alexlivre/archive/refs/heads/main.zip"
+            installCommand = "npx skills add alexlivre/pagespeed-optimizer-alexlivre -g -y"
+            category       = "Performance & SEO"
+        }
+    )
 }
 
 # Check for local skill directories

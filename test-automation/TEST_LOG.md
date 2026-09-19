@@ -1,5 +1,13 @@
 # Test Execution Log
 
+## 2026-09-19 - Installer Script Resilience & Remote One-Liner Fix
+- **Target**: `install.ps1` and `install.sh` remote execution resilience, remote registry fetching, catalog fallback, and dotfile copying.
+- **Result**: PASSED
+- **Total Tests**: 16
+- **Passed**: 16
+- **Failed**: 0
+- **Summary**: Verified remote one-liner execution support when `registry.json` is not present locally; added resilient web fetch and hardcoded catalog fallback in `install.ps1`; improved `install.sh` file copy handling.
+
 ## 2026-09-19 - Initial Validation
 
 - **Target**: `pagespeed-optimizer-alexlivre/scripts/verify-rules.mjs` on `pagespeed-optimizer-alexlivre/demo-page`
