@@ -1,6 +1,6 @@
 # PageSpeed Insights & GEO Optimizer (`pagespeed-optimizer-alexlivre`)
 
-> **Conceived and developed by [Alex Santos (alexlivre)](https://alexlivre.dev/)** • [GitHub: @alexlivre](https://github.com/alexlivre)
+> **Conceived and developed by [Alex Santos (alexlivre)](https://alexlivre.dev/)** • [GitHub: @alexlivre](https://github.com/alexlivre) • [Collection: skills-alexlivre](https://github.com/alexlivre/skills-alexlivre)
 
 A universal AI agent skill for analyzing, auditing, and optimizing web applications to **100/100** on [PageSpeed Insights](https://pagespeed.web.dev/) and Google Lighthouse 13+ across **Performance**, **Accessibility**, **Best Practices**, **SEO**, and **GEO (Generative Engine Optimization)** for AI search engines (Perplexity, ChatGPT Search, Gemini, Google AI Overviews, Claude).
 
@@ -59,27 +59,73 @@ pagespeed-optimizer-alexlivre/
 
 ## 💻 Installing the Skill
 
-The skill works with any agent that supports the OpenCode skills format (Antigravity, Claude Code, OpenCode, Cursor, etc.).
+Part of the **[skills-alexlivre](https://github.com/alexlivre/skills-alexlivre)** repository. The skill works seamlessly across all major AI agent and vibe coding tools (**Claude Code**, **OpenCode**, **Antigravity CLI**, **Cursor**, **Windsurf**, and **Roo Code**).
 
-### Option 1 — Global install (use across all projects)
+### Option 1 — One-Liner Quick Install (Recommended)
+
+Installs the skill directly to your system's global agent directories without needing to manually clone the repository:
+
+- **Linux / macOS / WSL**:
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/alexlivre/skills-alexlivre/main/install.sh | bash
+  ```
+
+- **Windows (PowerShell)**:
+  ```powershell
+  irm https://raw.githubusercontent.com/alexlivre/skills-alexlivre/main/install.ps1 | iex
+  ```
+
+---
+
+### Option 2 — Via `skills` Package Manager (`skills.sh`)
 
 ```bash
+# Global install (all projects)
+npx skills add alexlivre/skills-alexlivre@pagespeed-optimizer-alexlivre -g -y
+
+# Project-level install
+npx skills add alexlivre/skills-alexlivre@pagespeed-optimizer-alexlivre -y
+```
+
+---
+
+### Option 3 — Via Repository Installer Scripts
+
+If you cloned the [skills-alexlivre](https://github.com/alexlivre/skills-alexlivre) repository:
+
+```bash
+# Windows PowerShell
+.\install.ps1 -Skill pagespeed-optimizer-alexlivre
+
+# Linux / macOS Bash
+./install.sh -s pagespeed-optimizer-alexlivre
+
+# Cross-platform Node.js
+node install.mjs --skill pagespeed-optimizer-alexlivre
+```
+
+---
+
+### Option 4 — Manual Installation
+
+#### Global Install:
+```bash
+# Claude Code & Universal Agent Skills
+cp -r pagespeed-optimizer-alexlivre ~/.agents/skills/
+cp -r pagespeed-optimizer-alexlivre ~/.claude/skills/
+
 # OpenCode
 cp -r pagespeed-optimizer-alexlivre ~/.opencode/skills/
 
-# Claude Code
-cp -r pagespeed-optimizer-alexlivre ~/.claude/skills/
-
-# Antigravity CLI
+# Antigravity CLI (AGY)
 cp -r pagespeed-optimizer-alexlivre ~/.gemini/antigravity-cli/skills/
 ```
 
-### Option 2 — Project-level install (recommended for teams)
-
+#### Project-Level Install:
 ```bash
-# From your project root
-cp -r pagespeed-optimizer-alexlivre .opencode/skills/
-# or .claude/skills/, .gemini/skills/ depending on your agent
+# In your project root
+mkdir -p .agents/skills
+cp -r /path/to/pagespeed-optimizer-alexlivre .agents/skills/
 ```
 
 The agent will auto-detect the skill by matching the `description` field against your prompt.
