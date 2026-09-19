@@ -44,34 +44,88 @@ A comprehensive skill calibrated for **Lighthouse 13+**, **Core Web Vitals** (LC
 
 ## 🚀 How to Install & Use
 
-### Option 1: Global Agents Skills Directory (Recommended)
+### ⚡ One-Liner Quick Install (Recommended)
 
-Clone the repository or symlink/copy individual skills into your agent skills path:
+Choose your operating system or preferred shell to install all skills globally to your vibe coding CLIs (**Claude Code**, **OpenCode**, **Antigravity CLI**, **Cursor**, **Windsurf**, and **Roo Code**):
+
+#### Linux / macOS / WSL
+```bash
+curl -fsSL https://raw.githubusercontent.com/alexlivre/skills-alexlivre/main/install.sh | bash
+```
+
+#### Windows PowerShell
+```powershell
+irm https://raw.githubusercontent.com/alexlivre/skills-alexlivre/main/install.ps1 | iex
+```
+
+---
+
+### 🎛️ Advanced & Targeted Installation
+
+Clone the repository to customize your installation targets, install locally to a specific project, or select specific CLIs:
 
 ```bash
-# Clone the repository
 git clone https://github.com/alexlivre/skills-alexlivre.git
-
-# Copy a skill to your global agent skills folder
-# For agents using ~/.agents/skills (e.g., Claude Code, OpenCode):
-cp -r skills-alexlivre/pagespeed-optimizer-alexlivre ~/.agents/skills/
-
-# For Antigravity CLI:
-cp -r skills-alexlivre/pagespeed-optimizer-alexlivre ~/.gemini/antigravity-cli/skills/
+cd skills-alexlivre
 ```
 
-### Option 2: Project-Level Skill
+#### Windows (PowerShell)
+```powershell
+# Install only for Claude Code & OpenCode
+.\install.ps1 -Cli claude,opencode
 
-To make a skill available only within a specific project repository, copy it into your project's `.agents/skills/` directory:
+# Install into current project repository only (.claude/skills, .agents/skills)
+.\install.ps1 -Project
+
+# Install only for Cursor (.cursor/rules/*.mdc)
+.\install.ps1 -Cli cursor
+
+# List discovered skills and supported CLIs
+.\install.ps1 -List
+
+# Uninstall from targets
+.\install.ps1 -Uninstall
+```
+
+#### Linux / macOS (Bash)
+```bash
+# Make executable
+chmod +x install.sh
+
+# Install only for Claude Code & Antigravity
+./install.sh -c claude,antigravity
+
+# Install into current project directory only
+./install.sh -p
+
+# List available skills and supported tools
+./install.sh -l
+
+# Uninstall from targets
+./install.sh -u
+```
+
+#### Cross-Platform (Node.js)
+```bash
+# Works identically across Windows, macOS, and Linux
+node install.mjs
+node install.mjs --project --cli claude,opencode
+node install.mjs --list
+```
+
+---
+
+### 🌐 Open Agent Skills Package Manager (`skills.sh`)
+
+If you use the `skills` CLI, install directly via `npx`:
 
 ```bash
-mkdir -p .agents/skills
-cp -r /path/to/skills-alexlivre/pagespeed-optimizer-alexlivre .agents/skills/
+# Install globally
+npx skills add alexlivre/skills-alexlivre@pagespeed-optimizer-alexlivre -g -y
+
+# Install locally to project
+npx skills add alexlivre/skills-alexlivre@pagespeed-optimizer-alexlivre -y
 ```
-
-### Option 3: Direct Integration with Agent Customizations
-
-Reference the skill folder directly in your agent configuration or load the corresponding `SKILL.md` whenever running optimization, performance, or UI tasks.
 
 ---
 
@@ -87,6 +141,9 @@ skills-alexlivre/
 │   ├── references/                   # Deep reference manuals (performance, a11y, GEO, SEO)
 │   ├── scripts/                      # Verification gates and audit scripts
 │   └── templates/                    # GEO, robots.txt, and manifests
+├── install.sh                        # Universal Bash installer (Linux / macOS / WSL)
+├── install.ps1                       # Universal PowerShell installer (Windows)
+├── install.mjs                       # Universal Node.js installer (Cross-platform)
 ├── test-automation/                  # Verification and test execution logs
 ├── .gitignore
 ├── LICENSE                           # MIT License
