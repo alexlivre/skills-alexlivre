@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Alex Santos (@alexlivre) - AI Agent Skills Universal Installer
+# Alex Santos (@alexlivre) - AI Agent Skills Hub Universal Installer
 # Compatible with Linux, macOS, WSL, and Git Bash
 # ==============================================================================
 # Installs skills to:
@@ -16,7 +16,6 @@
 set -eo pipefail
 
 REPO_URL="https://github.com/alexlivre/skills-alexlivre"
-TARBALL_URL="https://github.com/alexlivre/skills-alexlivre/archive/refs/heads/main.tar.gz"
 
 # Colors for output
 RED='\033[0;31m'
@@ -30,9 +29,9 @@ NC='\033[0m' # No Color
 show_banner() {
   echo -e ""
   echo -e "${CYAN}=========================================================${NC}"
-  echo -e "${GREEN}${BOLD}   Alex Santos (@alexlivre) - AI Agent Skills Installer   ${NC}"
+  echo -e "${GREEN}${BOLD}   Alex Santos (@alexlivre) - AI Agent Skills Hub         ${NC}"
   echo -e "${CYAN}=========================================================${NC}"
-  echo -e "   Repository: ${BLUE}${REPO_URL}${NC}"
+  echo -e "   Central Hub: ${BLUE}${REPO_URL}${NC}"
   echo -e ""
 }
 
@@ -44,15 +43,15 @@ show_help() {
   echo -e "  -g, --global       Install globally in user home directories (default)"
   echo -e "  -p, --project      Install locally in current project directory"
   echo -e "  -c, --cli <name>   Target CLI (all, agents, claude, opencode, antigravity, cursor, windsurf, roo)"
-  echo -e "  -s, --skill <name> Specific skill to install (default: all discovered)"
+  echo -e "  -s, --skill <name> Specific skill to install (default: all registered)"
   echo -e "  -u, --uninstall    Uninstall specified skill(s) from target CLIs"
   echo -e "  -l, --list         List available skills and supported CLIs"
   echo -e "  -h, --help         Show this help message"
   echo -e ""
   echo -e "${BOLD}Examples:${NC}"
-  echo -e "  curl -fsSL https://raw.githubusercontent.com/alexlivre/skills-alexlivre/main/install.sh | bash"
-  echo -e "  ./install.sh --project --cli claude,opencode"
-  echo -e "  ./install.sh --skill pagespeed-optimizer-alexlivre"
+  echo -e "  ./install.sh -l"
+  echo -e "  ./install.sh -s pagespeed-optimizer-alexlivre"
+  echo -e "  ./install.sh -p -c claude,opencode -s pagespeed-optimizer-alexlivre"
   echo -e ""
 }
 
@@ -112,62 +111,49 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# Detect if running from local repo or standalone/piped
-IS_LOCAL=0
-SOURCE_DIR="$SCRIPT_DIR"
+# Default catalog skills
+declare -A SKILL_REPOS
+declare -A SKILL_DESCS
+declare -A SKILL_CATS
+declare -A SKILL_CMDS
 
-if ls "$SCRIPT_DIR"/*/SKILL.md >/dev/null 2>&1; then
-  IS_LOCAL=1
-fi
+# Register pagespeed-optimizer-alexlivre
+SKILL_REPOS["pagespeed-optimizer-alexlivre"]="https://github.com/alexlivre/pagespeed-optimizer-alexlivre"
+SKILL_DESCS["pagespeed-optimizer-alexlivre"]="Universal AI agent skill to optimize web applications to 100/100 on PageSpeed Insights & Lighthouse 13+."
+SKILL_CATS["pagespeed-optimizer-alexlivre"]="Performance & SEO"
+SKILL_CMDS["pagespeed-optimizer-alexlivre"]="npx skills add alexlivre/pagespeed-optimizer-alexlivre -g -y"
 
-if [[ $IS_LOCAL -eq 0 ]]; then
-  echo -e "${CYAN}[i] Fetching latest skills from GitHub...${NC}"
-  TEMP_DIR="$(mktemp -d 2>/dev/null || mktemp -d -t 'skills-alexlivre')"
-  
-  if command -v curl >/dev/null 2>&1; then
-    curl -fsSL "$TARBALL_URL" | tar -xz -C "$TEMP_DIR"
-  elif command -v wget >/dev/null 2>&1; then
-    wget -qO- "$TARBALL_URL" | tar -xz -C "$TEMP_DIR"
-  elif command -v git >/dev/null 2>&1; then
-    git clone --depth 1 "$REPO_URL.git" "$TEMP_DIR/skills-alexlivre-main"
-  else
-    echo -e "${RED}Error: curl, wget, or git required to download skills.${NC}"
-    exit 1
+# If registry.json exists and node is available, enrich metadata
+REGISTRY_FILE="$SCRIPT_DIR/registry.json"
+CATALOG_SKILLS=("pagespeed-optimizer-alexlivre")
+
+if [[ -f "$REGISTRY_FILE" && -x "$(command -v node 2>/dev/null)" ]]; then
+  EXTRACTED_NAMES="$(node -e "
+    try {
+      const r = JSON.parse(require('fs').readFileSync('$REGISTRY_FILE', 'utf8'));
+      if (Array.isArray(r.skills)) {
+        console.log(r.skills.map(s => s.name).join(' '));
+      }
+    } catch {}
+  " 2>/dev/null || true)"
+  if [[ -n "$EXTRACTED_NAMES" ]]; then
+    read -ra CATALOG_SKILLS <<< "$EXTRACTED_NAMES"
   fi
-
-  EXTRACTED_DIR="$(find "$TEMP_DIR" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
-  SOURCE_DIR="${EXTRACTED_DIR:-$TEMP_DIR}"
-fi
-
-# Discover skills in source directory
-DISCOVERED_SKILLS=()
-for dir in "$SOURCE_DIR"/*/; do
-  if [[ -f "${dir}SKILL.md" ]]; then
-    skill_name="$(basename "$dir")"
-    DISCOVERED_SKILLS+=("$skill_name")
-  fi
-done
-
-if [[ ${#DISCOVERED_SKILLS[@]} -eq 0 ]]; then
-  echo -e "${RED}Error: No skills found with a valid SKILL.md.${NC}"
-  exit 1
 fi
 
 if [[ $DO_LIST -eq 1 ]]; then
   show_banner
-  echo -e "${GREEN}${BOLD}Discovered Skills in Repository:${NC}"
-  for sk in "${DISCOVERED_SKILLS[@]}"; do
-    skill_md="$SOURCE_DIR/$sk/SKILL.md"
-    desc="AI Agent Skill"
-    if [[ -f "$skill_md" ]]; then
-      extracted_desc="$(grep -m 1 '^description:' "$skill_md" | sed 's/^description:[[:space:]]*//' || true)"
-      if [[ -n "$extracted_desc" ]]; then
-        desc="${extracted_desc:0:80}"
-      fi
-    fi
-    echo -e "  - ${YELLOW}${BOLD}$sk${NC} : $desc"
+  echo -e "${GREEN}${BOLD}Centralized Skills in Ecosystem:${NC}\n"
+  for sk in "${CATALOG_SKILLS[@]}"; do
+    cat_tag="${SKILL_CATS[$sk]:-AI Agent Skill}"
+    desc="${SKILL_DESCS[$sk]:-Universal AI Agent Skill by @alexlivre}"
+    repo="${SKILL_REPOS[$sk]:-https://github.com/alexlivre/$sk}"
+    cmd="${SKILL_CMDS[$sk]:-npx skills add alexlivre/$sk -g -y}"
+    echo -e "  - ${YELLOW}${BOLD}$sk${NC} [${CYAN}$cat_tag${NC}]"
+    echo -e "    ${desc}"
+    echo -e "    Repository : ${CYAN}$repo${NC}"
+    echo -e "    Quick Add  : ${GREEN}$cmd${NC}\n"
   done
-  echo -e ""
   echo -e "${GREEN}${BOLD}Supported CLIs & Vibe Coding Tools:${NC}"
   echo -e "  - agents       Universal Agent Skills specification (~/.agents/skills/)"
   echo -e "  - claude       Claude Code (~/.claude/skills/ and ~/.agents/skills/)"
@@ -176,35 +162,34 @@ if [[ $DO_LIST -eq 1 ]]; then
   echo -e "  - cursor       Cursor (.cursor/rules/*.mdc)"
   echo -e "  - windsurf     Windsurf (.windsurf/rules/ and ~/.codeium/windsurf/memories/)"
   echo -e "  - roo          Roo Code / Cline (~/.roo/skills/)"
-  echo -e "  - all          Install to all supported tools simultaneously (default)"
-  echo -e ""
+  echo -e "  - all          Install to all supported tools simultaneously (default)\n"
   exit 0
 fi
 
 # Filter skills to install
 SKILLS_TO_INSTALL=()
 if [[ "$TARGET_SKILL" == "all" ]]; then
-  SKILLS_TO_INSTALL=("${DISCOVERED_SKILLS[@]}")
+  SKILLS_TO_INSTALL=("${CATALOG_SKILLS[@]}")
 else
   IFS=',' read -ra REQ_SKILLS <<< "$TARGET_SKILL"
   for req in "${REQ_SKILLS[@]}"; do
     req="$(echo "$req" | xargs)"
     found=0
-    for disc in "${DISCOVERED_SKILLS[@]}"; do
-      if [[ "$disc" == "$req" ]]; then
-        SKILLS_TO_INSTALL+=("$disc")
+    for cat_sk in "${CATALOG_SKILLS[@]}"; do
+      if [[ "$cat_sk" == "$req" ]]; then
+        SKILLS_TO_INSTALL+=("$cat_sk")
         found=1
         break
       fi
     done
     if [[ $found -eq 0 ]]; then
-      echo -e "${YELLOW}Warning: Skill '$req' not found in repository. Skipping.${NC}"
+      echo -e "${YELLOW}Warning: Skill '$req' not found in registry. Skipping.${NC}"
     fi
   done
 fi
 
 if [[ ${#SKILLS_TO_INSTALL[@]} -eq 0 ]]; then
-  echo -e "${RED}Error: No matching skills found to install.${NC}"
+  echo -e "${RED}Error: No valid skills selected.${NC}"
   exit 1
 fi
 
@@ -308,16 +293,13 @@ get_target_dirs() {
 }
 
 for skill in "${SKILLS_TO_INSTALL[@]}"; do
-  skill_src="$SOURCE_DIR/$skill"
   echo -e "${CYAN}>> Processing skill: ${BOLD}$skill${NC}"
 
-  for cli in "${SELECTED_CLIS[@]}"; do
-    mapfile -t TARGET_PATHS < <(get_target_dirs "$cli" "$SCOPE" "$skill" | sort -u)
-
-    for dest in "${TARGET_PATHS[@]}"; do
-      if [[ -z "$dest" ]]; then continue; fi
-
-      if [[ $DO_UNINSTALL -eq 1 ]]; then
+  if [[ $DO_UNINSTALL -eq 1 ]]; then
+    for cli in "${SELECTED_CLIS[@]}"; do
+      mapfile -t TARGET_PATHS < <(get_target_dirs "$cli" "$SCOPE" "$skill" | sort -u)
+      for dest in "${TARGET_PATHS[@]}"; do
+        if [[ -z "$dest" ]]; then continue; fi
         if [[ "$cli" == "cursor" ]]; then
           target_file="$dest/$skill.mdc"
           if [[ -f "$target_file" ]]; then
@@ -339,16 +321,40 @@ for skill in "${SKILLS_TO_INSTALL[@]}"; do
             SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
           fi
         fi
-      else
-        # Install
-        if [[ "$cli" == "cursor" ]]; then
-          mkdir -p "$dest"
-          rule_file="$dest/$skill.mdc"
-          skill_content=""
-          if [[ -f "$skill_src/SKILL.md" ]]; then
-            skill_content="$(cat "$skill_src/SKILL.md")"
-          fi
-          cat > "$rule_file" <<EOF
+      done
+    done
+    continue
+  fi
+
+  # Resolve source directory
+  skill_src="$SCRIPT_DIR/$skill"
+  if [[ ! -d "$skill_src" || ! -f "$skill_src/SKILL.md" ]]; then
+    TEMP_SKILL_DIR="$(mktemp -d 2>/dev/null || mktemp -d -t "skill-$skill")"
+    repo_url="${SKILL_REPOS[$skill]:-https://github.com/alexlivre/$skill.git}"
+    echo -e "   ${BLUE}[i] Fetching $skill from $repo_url...${NC}"
+    if git clone --depth 1 "$repo_url" "$TEMP_SKILL_DIR" >/dev/null 2>&1; then
+      skill_src="$TEMP_SKILL_DIR"
+    else
+      echo -e "   ${RED}[!] Failed to clone $repo_url${NC}"
+      FAILED_COUNT=$((FAILED_COUNT + 1))
+      rm -rf "$TEMP_SKILL_DIR"
+      continue
+    fi
+  fi
+
+  for cli in "${SELECTED_CLIS[@]}"; do
+    mapfile -t TARGET_PATHS < <(get_target_dirs "$cli" "$SCOPE" "$skill" | sort -u)
+
+    for dest in "${TARGET_PATHS[@]}"; do
+      if [[ -z "$dest" ]]; then continue; fi
+      if [[ "$cli" == "cursor" ]]; then
+        mkdir -p "$dest"
+        rule_file="$dest/$skill.mdc"
+        skill_content=""
+        if [[ -f "$skill_src/SKILL.md" ]]; then
+          skill_content="$(cat "$skill_src/SKILL.md")"
+        fi
+        cat > "$rule_file" <<EOF
 ---
 description: $skill AI Agent Skill by @alexlivre
 globs: *
@@ -357,23 +363,21 @@ alwaysApply: false
 
 $skill_content
 EOF
-          echo -e "   ${GREEN}[+] Installed Cursor Rule:${NC} $rule_file"
-          SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
-        elif [[ "$cli" == "windsurf" ]]; then
-          mkdir -p "$dest"
-          rule_file="$dest/$skill.md"
-          if [[ -f "$skill_src/SKILL.md" ]]; then
-            cp -f "$skill_src/SKILL.md" "$rule_file"
-            echo -e "   ${GREEN}[+] Installed Windsurf Rule:${NC} $rule_file"
-            SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
-          fi
-        else
-          # Standard Skill Directory
-          mkdir -p "$dest"
-          cp -R "$skill_src"/* "$dest/"
-          echo -e "   ${GREEN}[+] Installed for $cli ->${NC} $dest"
+        echo -e "   ${GREEN}[+] Installed Cursor Rule:${NC} $rule_file"
+        SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+      elif [[ "$cli" == "windsurf" ]]; then
+        mkdir -p "$dest"
+        rule_file="$dest/$skill.md"
+        if [[ -f "$skill_src/SKILL.md" ]]; then
+          cp -f "$skill_src/SKILL.md" "$rule_file"
+          echo -e "   ${GREEN}[+] Installed Windsurf Rule:${NC} $rule_file"
           SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
         fi
+      else
+        mkdir -p "$dest"
+        cp -R "$skill_src"/* "$dest/"
+        echo -e "   ${GREEN}[+] Installed for $cli ->${NC} $dest"
+        SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
       fi
     done
   done
@@ -384,14 +388,10 @@ echo -e "${CYAN}=========================================================${NC}"
 if [[ $DO_UNINSTALL -eq 1 ]]; then
   echo -e "${GREEN}${BOLD}Uninstall completed! ($SUCCESS_COUNT locations updated, $FAILED_COUNT errors)${NC}"
 else
-  echo -e "${GREEN}${BOLD}Installation completed successfully! ($SUCCESS_COUNT locations configured, $FAILED_COUNT errors)${NC}"
+  echo -e "${GREEN}${BOLD}Installation completed! ($SUCCESS_COUNT locations configured, $FAILED_COUNT errors)${NC}"
   echo -e ""
-  echo -e "${BOLD}How to verify and use:${NC}"
-  echo -e "  * ${CYAN}Claude Code:${NC} Start 'claude' - skills in ~/.claude/skills and ~/.agents/skills are active automatically."
-  echo -e "  * ${CYAN}OpenCode:${NC} Start 'opencode' - detected from ~/.opencode/skills and ~/.agents/skills."
-  echo -e "  * ${CYAN}Antigravity CLI:${NC} Start 'agy' - detected from ~/.gemini/antigravity-cli/skills/ and ~/.agents/skills/."
-  echo -e "  * ${CYAN}Cursor:${NC} Rules are loaded from .cursor/rules/ in your workspace."
-  echo -e "  * ${CYAN}Vibe Coding:${NC} Prompt your agent: 'Audit and optimize this app to 100/100 PageSpeed using the alexlivre skill'"
+  echo -e "${BOLD}Direct package manager alternative:${NC}"
+  echo -e "  ${CYAN}npx skills add alexlivre/pagespeed-optimizer-alexlivre -g -y${NC}"
 fi
 echo -e "${CYAN}=========================================================${NC}"
 echo -e ""

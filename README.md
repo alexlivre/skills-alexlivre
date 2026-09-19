@@ -1,184 +1,174 @@
-# Alex Santos Agent Skills (`skills-alexlivre`)
+# Alex Santos AI Agent Skills Hub (`skills-alexlivre`)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Author](https://img.shields.io/badge/Author-Alex_Santos-orange.svg)](https://alexlivre.dev/)
 [![GitHub](https://img.shields.io/badge/GitHub-@alexlivre-black.svg)](https://github.com/alexlivre)
+[![Skills](https://img.shields.io/badge/Skills-Centralized_Hub-emerald.svg)](https://github.com/alexlivre/skills-alexlivre)
 
-A curated collection of production-grade, battle-tested **AI Agent Skills** designed for modern agentic coding workflows, including **Antigravity CLI**, **Claude Code**, **OpenCode**, **Cursor**, and custom LLM agents.
+A centralized hub, directory, and registry of production-grade, battle-tested **AI Agent Skills** designed for modern agentic coding workflows, including **Antigravity CLI**, **Claude Code**, **OpenCode**, **Cursor**, **Windsurf**, and custom LLM agents.
 
 Conceived and maintained by **[Alex Santos (alexlivre)](https://alexlivre.dev/)**.
 
 ---
 
-## 🧭 Overview
+## 🧭 Overview & Architecture
 
-AI coding agents are only as capable as the domain expertise and deterministic guardrails provided to them. This repository provides modular, high-impact skills that empower AI agents with:
+AI coding agents are only as reliable as the deterministic domain playbooks and automated verification gates provided to them. 
 
-- **Deep Domain Playbooks**: Step-by-step methodologies that replace superficial code generation with senior-engineer-level solutions.
-- **Deterministic Gates & Linters**: Custom validation scripts that enforce strict compliance before concluding tasks, preventing AI hallucination or skipped requirements.
-- **Progressive Disclosure**: Lightweight orchestration entrypoints (`SKILL.md`) backed by modular references and production-hardened templates (`references/`, `recipes/`, `templates/`).
+To ensure maximum modularity, seamless versioning, and direct compatibility with the open **Agent Skills** ecosystem (`skills.sh` / `npx skills add`), each skill in the Alex Santos portfolio is developed in its own dedicated, standalone repository. 
 
----
-
-## 📦 Available Skills
-
-| Skill | Description | Status |
-| :--- | :--- | :---: |
-| **[`pagespeed-optimizer-alexlivre`](./pagespeed-optimizer-alexlivre)** | Universal agent skill to analyze, audit, and optimize web applications to **100/100** on PageSpeed Insights & Google Lighthouse 13+ across Performance, Accessibility (WCAG 2.2 AA), Best Practices, SEO, and GEO (Generative Engine Optimization). | Available |
+**`skills-alexlivre` serves as the official central hub**:
+- 📌 **Centralized Catalog**: Single point of discovery for all production-grade skills by `@alexlivre`.
+- 🔗 **Direct Links & Documentation**: Fast access to repositories, architecture manuals, and release notes.
+- ⚡ **Unified Installation**: Standardized installation commands via `npx skills add`, cross-platform installers, or manual CLI setups.
+- 📋 **Machine-Readable Registry**: Ships with [`registry.json`](./registry.json) for programmatic tooling, agents, and automated aggregators.
 
 ---
 
-### Spotlight: `pagespeed-optimizer-alexlivre`
+## 📦 Skills Directory & Catalog
 
-A comprehensive skill calibrated for **Lighthouse 13+**, **Core Web Vitals** (LCP, INP, CLS, FCP, TTFB), **WCAG 2.2 AA**, and **GEO (Generative Engine Optimization)** for modern AI search engines (Perplexity, ChatGPT Search, Gemini, Google AI Overviews, Claude).
-
-**Highlights:**
-- **Automated Verification**: Ships with `verify-rules.mjs` to deterministically lint HTML and JavaScript before running dual Lighthouse CLI runs.
-- **Production Recipes**: Out-of-the-box configurations for Nginx (Brotli + 1-year immutable caching), Apache, Next.js 15/16 App Router, and Astro 5.
-- **GEO & AI Search Ready**: Includes standard `llms.txt`, `llms-full.txt`, and 3-profile `robots.txt` templates.
-- **Working Reference Benchmark**: Contains a complete `demo-page` scoring 100/100 on all categories.
-
-👉 Read full documentation in the [pagespeed-optimizer-alexlivre README](./pagespeed-optimizer-alexlivre/README.md).
+| Skill | Repository | Description | Category | Status |
+| :--- | :--- | :--- | :---: | :---: |
+| **[`pagespeed-optimizer-alexlivre`](https://github.com/alexlivre/pagespeed-optimizer-alexlivre)** | [alexlivre/pagespeed-optimizer-alexlivre](https://github.com/alexlivre/pagespeed-optimizer-alexlivre) | Universal AI agent skill to analyze, audit, and optimize web applications to **100/100** on PageSpeed Insights & Google Lighthouse 13+ across Performance, Accessibility (WCAG 2.2 AA), Best Practices, SEO, and GEO (Generative Engine Optimization). | Performance & SEO | 🟢 Active |
 
 ---
 
-## 🚀 How to Install & Use
+### 🌟 Featured Skill: [`pagespeed-optimizer-alexlivre`](https://github.com/alexlivre/pagespeed-optimizer-alexlivre)
 
-### ⚡ One-Liner Quick Install (Recommended)
+A comprehensive, deterministic optimization engine calibrated for **Lighthouse 13+**, **Core Web Vitals** (LCP, INP, CLS, FCP, TTFB), **WCAG 2.2 AA**, and **GEO (Generative Engine Optimization)** for modern AI search engines (Perplexity, ChatGPT Search, Gemini, Google AI Overviews, Claude).
 
-Choose your operating system or preferred shell to install all skills globally to your vibe coding CLIs (**Claude Code**, **OpenCode**, **Antigravity CLI**, **Cursor**, **Windsurf**, and **Roo Code**):
+- **Dedicated Repository**: [https://github.com/alexlivre/pagespeed-optimizer-alexlivre](https://github.com/alexlivre/pagespeed-optimizer-alexlivre)
+- **Direct Installation**:
+  ```bash
+  npx skills add alexlivre/pagespeed-optimizer-alexlivre -g -y
+  ```
+- **Key Features**:
+  - **Automated Verification**: Deterministic static checks via `verify-rules.mjs` before running Lighthouse CLI.
+  - **Production Server Recipes**: Zero-guess configs for Nginx (Brotli + immutable caching), Apache, Next.js 15/16 App Router, and Astro 5.
+  - **GEO & AI Search Ready**: Ready-to-deploy `llms.txt`, `llms-full.txt`, and 3-profile `robots.txt` templates.
+  - **100/100 Reference Benchmark**: Fully functioning demo page scoring 100 on all categories.
 
-#### Linux / macOS / WSL
+👉 Read complete guide, benchmarks, and recipes at the [pagespeed-optimizer-alexlivre repository](https://github.com/alexlivre/pagespeed-optimizer-alexlivre).
+
+---
+
+## 🚀 How to Install Skills
+
+Each skill can be installed individually into your preferred vibe coding environment using the standard package manager or native CLI integration.
+
+### Method 1: `skills.sh` Package Manager (Recommended)
+
+Install directly using `npx`:
+
 ```bash
-curl -fsSL https://raw.githubusercontent.com/alexlivre/skills-alexlivre/main/install.sh | bash
-```
+# Global install (available across all projects)
+npx skills add alexlivre/pagespeed-optimizer-alexlivre -g -y
 
-#### Windows PowerShell
-```powershell
-irm https://raw.githubusercontent.com/alexlivre/skills-alexlivre/main/install.ps1 | iex
+# Local install (current project directory only)
+npx skills add alexlivre/pagespeed-optimizer-alexlivre -y
 ```
 
 ---
 
-### 🎛️ Advanced & Targeted Installation
+### Method 2: Universal Hub Installers
 
-Clone the repository to customize your installation targets, install locally to a specific project, or select specific CLIs:
+Clone this hub repository to query the registry and install skills across multiple AI coding CLIs (**Claude Code**, **Antigravity CLI**, **OpenCode**, **Cursor**, **Windsurf**, **Roo Code**):
 
 ```bash
 git clone https://github.com/alexlivre/skills-alexlivre.git
 cd skills-alexlivre
 ```
 
-#### Windows (PowerShell)
+#### Node.js (Cross-Platform)
+```bash
+# List all registered skills and supported environments
+node install.mjs --list
+
+# Install specific skill globally
+node install.mjs --skill pagespeed-optimizer-alexlivre
+
+# Install for specific CLIs in the current project
+node install.mjs --project --cli claude,antigravity --skill pagespeed-optimizer-alexlivre
+```
+
+#### Windows PowerShell
 ```powershell
-# Install only for Claude Code & OpenCode
-.\install.ps1 -Cli claude,opencode
-
-# Install into current project repository only (.claude/skills, .agents/skills)
-.\install.ps1 -Project
-
-# Install only for Cursor (.cursor/rules/*.mdc)
-.\install.ps1 -Cli cursor
-
-# List discovered skills and supported CLIs
+# List registered skills
 .\install.ps1 -List
 
-# Uninstall from targets
-.\install.ps1 -Uninstall
+# Install skill globally
+.\install.ps1 -Skill pagespeed-optimizer-alexlivre
+
+# Install locally for Cursor & Claude Code
+.\install.ps1 -Project -Cli cursor,claude -Skill pagespeed-optimizer-alexlivre
 ```
 
 #### Linux / macOS (Bash)
 ```bash
-# Make executable
-chmod +x install.sh
-
-# Install only for Claude Code & Antigravity
-./install.sh -c claude,antigravity
-
-# Install into current project directory only
-./install.sh -p
-
-# List available skills and supported tools
+# List registered skills
 ./install.sh -l
 
-# Uninstall from targets
-./install.sh -u
-```
-
-#### Cross-Platform (Node.js)
-```bash
-# Works identically across Windows, macOS, and Linux
-node install.mjs
-node install.mjs --project --cli claude,opencode
-node install.mjs --list
+# Install skill globally
+./install.sh -s pagespeed-optimizer-alexlivre
 ```
 
 ---
 
-### 🌐 Open Agent Skills Package Manager (`skills.sh`)
+### Method 3: Direct Git Integration
 
-If you use the `skills` CLI, install directly via `npx`:
+To install manually to specific agent directories:
 
 ```bash
-# Install globally
-npx skills add alexlivre/skills-alexlivre@pagespeed-optimizer-alexlivre -g -y
+# Claude Code / OpenCode / Universal Agents
+git clone https://github.com/alexlivre/pagespeed-optimizer-alexlivre.git ~/.agents/skills/pagespeed-optimizer-alexlivre
 
-# Install locally to project
-npx skills add alexlivre/skills-alexlivre@pagespeed-optimizer-alexlivre -y
+# Antigravity CLI
+git clone https://github.com/alexlivre/pagespeed-optimizer-alexlivre.git ~/.gemini/antigravity-cli/skills/pagespeed-optimizer-alexlivre
+
+# Claude Code (~/.claude)
+git clone https://github.com/alexlivre/pagespeed-optimizer-alexlivre.git ~/.claude/skills/pagespeed-optimizer-alexlivre
 ```
 
 ---
 
-## 📁 Repository Structure
+## 🛠️ Hub Repository Structure
 
 ```
 skills-alexlivre/
-├── pagespeed-optimizer-alexlivre/    # PageSpeed Insights & GEO Optimizer
-│   ├── SKILL.md                      # Agent entrypoint and operational playbook
-│   ├── README.md                     # Skill documentation and usage guide
-│   ├── demo-page/                    # 100/100 reference benchmark application
-│   ├── recipes/                      # Server configs (Nginx, Apache, Next.js, Astro)
-│   ├── references/                   # Deep reference manuals (performance, a11y, GEO, SEO)
-│   ├── scripts/                      # Verification gates and audit scripts
-│   └── templates/                    # GEO, robots.txt, and manifests
-├── install.sh                        # Universal Bash installer (Linux / macOS / WSL)
-├── install.ps1                       # Universal PowerShell installer (Windows)
-├── install.mjs                       # Universal Node.js installer (Cross-platform)
-├── test-automation/                  # Verification and test execution logs
+├── registry.json             # Machine-readable registry of skills and metadata
+├── install.mjs               # Universal Node.js installer & registry query tool
+├── install.ps1               # Windows PowerShell installer & registry query tool
+├── install.sh                # Linux / macOS Bash installer & registry query tool
+├── test-automation/          # Registry and installer validation tests & logs
 ├── .gitignore
-├── LICENSE                           # MIT License
-└── README.md                         # Repository documentation (this file)
+├── LICENSE                   # MIT License
+└── README.md                 # Central hub documentation (this file)
 ```
 
 ---
 
-## 🛠️ Design Philosophy & Quality Standards
+## 🎯 Design Standards & Philosophy
 
-Every skill in this repository adheres to three foundational rules:
+Every skill cataloged in this hub adheres to three non-negotiable principles:
 
-1. **Intention + Guardrails > Generic Defaults**: Skills reject generic "AI slop" or superficial advice in favor of concrete, verifiable code and configs.
-2. **Business Protection First**: Optimizations must never break conversion tracking, event attribution, or legal compliance.
-3. **Deterministic Gatekeeping**: Where possible, skills provide automated scripts (`verify-rules.mjs`, linters, tests) that agents run to objectively prove compliance.
+1. **Intention + Guardrails > Generic Defaults**: Every skill provides concrete, verifiable code and operational playbooks rather than superficial or generic AI output.
+2. **Business Protection First**: Optimizations and scripts never break analytics, conversion tracking, or legal compliance.
+3. **Deterministic Gates**: Automated verification scripts (linters, pre-audit checks, tests) allow agents to verify their own output before closing tasks.
 
 ---
 
 ## 🤝 Contributing
 
-Contributions, feedback, and suggestions from the community are warmly welcome!
+Have an idea for a skill or want to suggest an improvement?
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/new-skill`)
-3. Commit your changes (`git commit -m 'feat: add new skill'`)
-4. Push to the branch (`git push origin feature/new-skill`)
-5. Open a Pull Request
-
-Please ensure any contributed skill includes a clear `SKILL.md`, documentation, and validation mechanisms.
+1. For issues or feature requests with a specific skill, please open an issue in that skill's dedicated repository (e.g., [pagespeed-optimizer-alexlivre](https://github.com/alexlivre/pagespeed-optimizer-alexlivre/issues)).
+2. For hub improvements, new skill submissions, or installer updates, open a PR in this repository.
 
 ---
 
 ## 📄 License
 
-This repository is licensed under the [MIT License](LICENSE).
+This repository is licensed under the [MIT License](LICENSE). Each skill repository maintains its own MIT License.
 
 ---
 

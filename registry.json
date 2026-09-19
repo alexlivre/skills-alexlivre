@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "skills-alexlivre",
+  "title": "Alex Santos AI Agent Skills Hub",
+  "description": "Centralized hub and registry for production-grade AI Agent Skills by Alex Santos (@alexlivre).",
+  "author": {
+    "name": "Alex Santos",
+    "handle": "alexlivre",
+    "url": "https://alexlivre.dev",
+    "github": "https://github.com/alexlivre"
+  },
+  "skills": [
+    {
+      "name": "pagespeed-optimizer-alexlivre",
+      "title": "PageSpeed & Lighthouse 100/100 Optimizer",
+      "description": "Universal AI agent skill to analyze, audit, and optimize web applications to 100/100 on PageSpeed Insights & Google Lighthouse 13+ across Performance, Accessibility (WCAG 2.2 AA), Best Practices, SEO, and GEO.",
+      "repo": "https://github.com/alexlivre/pagespeed-optimizer-alexlivre",
+      "gitUrl": "https://github.com/alexlivre/pagespeed-optimizer-alexlivre.git",
+      "zipUrl": "https://github.com/alexlivre/pagespeed-optimizer-alexlivre/archive/refs/heads/main.zip",
+      "installCommand": "npx skills add alexlivre/pagespeed-optimizer-alexlivre -g -y",
+      "category": "Performance & SEO",
+      "tags": [
+        "pagespeed",
+        "lighthouse",
+        "core-web-vitals",
+        "geo",
+        "seo",
+        "wcag",
+        "accessibility",
+        "performance"
+      ],
+      "status": "active"
+    }
+  ]
+}

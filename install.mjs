@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 /**
- * Universal AI Agent Skills Cross-Platform Installer
- * Created for Alex Santos (@alexlivre) AI Agent Skills.
+ * Universal AI Agent Skills Cross-Platform Installer & Registry Hub
+ * Created for Alex Santos (@alexlivre) AI Agent Skills Hub.
  * Works on Windows, macOS, and Linux without any external dependencies.
  *
  * Supports:
@@ -18,6 +18,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
+import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -38,9 +39,9 @@ const c = {
 
 function showBanner() {
   console.log(`\n${c.cyan}=========================================================${c.reset}`);
-  console.log(`${c.green}${c.bold}   Alex Santos (@alexlivre) - AI Agent Skills Installer   ${c.reset}`);
+  console.log(`${c.green}${c.bold}   Alex Santos (@alexlivre) - AI Agent Skills Hub         ${c.reset}`);
   console.log(`${c.cyan}=========================================================${c.reset}`);
-  console.log(`   Repository: ${c.gray}${REPO_URL}${c.reset}\n`);
+  console.log(`   Central Hub: ${c.gray}${REPO_URL}${c.reset}\n`);
 }
 
 function showHelp() {
@@ -50,14 +51,14 @@ function showHelp() {
   console.log(`  -g, --global       Install globally in user home directories (default)`);
   console.log(`  -p, --project      Install locally in current working project`);
   console.log(`  -c, --cli <name>   Target CLI (all, agents, claude, opencode, antigravity, cursor, windsurf, roo)`);
-  console.log(`  -s, --skill <name> Specific skill to install (default: all discovered)`);
+  console.log(`  -s, --skill <name> Specific skill to install (default: all registered)`);
   console.log(`  -u, --uninstall    Uninstall specified skill(s) from target CLIs`);
   console.log(`  -l, --list         List available skills and supported CLIs`);
   console.log(`  -h, --help         Show this help message\n`);
   console.log(`${c.bold}Examples:${c.reset}`);
-  console.log(`  ${c.cyan}node install.mjs${c.reset}`);
-  console.log(`  ${c.cyan}node install.mjs --project --cli claude,opencode${c.reset}`);
-  console.log(`  ${c.cyan}node install.mjs --skill pagespeed-optimizer-alexlivre${c.reset}\n`);
+  console.log(`  ${c.cyan}node install.mjs --list${c.reset}`);
+  console.log(`  ${c.cyan}node install.mjs --skill pagespeed-optimizer-alexlivre${c.reset}`);
+  console.log(`  ${c.cyan}node install.mjs --project --cli claude,opencode${c.reset}\n`);
 }
 
 // Parse command line arguments
@@ -93,46 +94,72 @@ for (let i = 0; i < args.length; i++) {
 }
 
 const sourceDir = __dirname;
-const discoveredSkills = [];
+const registryPath = path.join(sourceDir, 'registry.json');
+const registrySkills = [];
+const skillsMap = new Map();
 
-// Discover skills
+// 1. Read registry.json if present
+if (fs.existsSync(registryPath)) {
+  try {
+    const raw = fs.readFileSync(registryPath, 'utf8');
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed.skills)) {
+      for (const item of parsed.skills) {
+        registrySkills.push(item.name);
+        skillsMap.set(item.name, item);
+      }
+    }
+  } catch (err) {
+    console.warn(`${c.yellow}Warning: Failed to parse registry.json: ${err.message}${c.reset}`);
+  }
+}
+
+// 2. Discover any local skills
 try {
   const entries = fs.readdirSync(sourceDir, { withFileTypes: true });
   for (const entry of entries) {
     if (entry.isDirectory()) {
       const skillMd = path.join(sourceDir, entry.name, 'SKILL.md');
       if (fs.existsSync(skillMd)) {
-        discoveredSkills.push(entry.name);
+        if (!skillsMap.has(entry.name)) {
+          registrySkills.push(entry.name);
+          skillsMap.set(entry.name, {
+            name: entry.name,
+            description: 'Local AI Agent Skill',
+            localPath: path.join(sourceDir, entry.name),
+          });
+        } else {
+          const item = skillsMap.get(entry.name);
+          item.localPath = path.join(sourceDir, entry.name);
+        }
       }
     }
   }
 } catch (err) {
-  console.error(`${c.red}Failed to read source directory: ${err.message}${c.reset}`);
-  process.exit(1);
+  console.warn(`${c.yellow}Warning: Could not read local directory: ${err.message}${c.reset}`);
 }
 
-if (discoveredSkills.length === 0) {
-  console.error(`${c.red}Error: No skills found with SKILL.md in ${sourceDir}${c.reset}`);
+if (registrySkills.length === 0) {
+  console.error(`${c.red}Error: No skills found in registry or local directory.${c.reset}`);
   process.exit(1);
 }
 
 if (doList) {
   showBanner();
-  console.log(`${c.green}${c.bold}Discovered Skills in Repository:${c.reset}`);
-  for (const sk of discoveredSkills) {
-    let desc = 'AI Agent Skill';
-    const skillMd = path.join(sourceDir, sk, 'SKILL.md');
-    try {
-      const content = fs.readFileSync(skillMd, 'utf8');
-      const m = content.match(/description:\s*(.+)/);
-      if (m) {
-        desc = m[1].replace(/["']/g, '').trim();
-        if (desc.length > 80) desc = desc.slice(0, 77) + '...';
-      }
-    } catch {}
-    console.log(`  - ${c.yellow}${c.bold}${sk}${c.reset} : ${c.gray}${desc}${c.reset}`);
+  console.log(`${c.green}${c.bold}Centralized Skills in Ecosystem:${c.reset}\n`);
+  for (const skName of registrySkills) {
+    const item = skillsMap.get(skName);
+    console.log(`  - ${c.yellow}${c.bold}${item.name}${c.reset} ${item.category ? `[${c.cyan}${item.category}${c.reset}]` : ''}`);
+    console.log(`    ${c.gray}${item.description || 'AI Agent Skill'}${c.reset}`);
+    if (item.repo) {
+      console.log(`    Repository : ${c.cyan}${item.repo}${c.reset}`);
+    }
+    if (item.installCommand) {
+      console.log(`    Quick Add  : ${c.green}${item.installCommand}${c.reset}`);
+    }
+    console.log('');
   }
-  console.log(`\n${c.green}${c.bold}Supported CLIs & Vibe Coding Tools:${c.reset}`);
+  console.log(`${c.green}${c.bold}Supported CLIs & Vibe Coding Tools:${c.reset}`);
   console.log(`  - agents       Universal Agent Skills specification (~/.agents/skills/)`);
   console.log(`  - claude       Claude Code (~/.claude/skills/ and ~/.agents/skills/)`);
   console.log(`  - opencode     OpenCode (~/.opencode/skills/ and ~/.agents/skills/)`);
@@ -147,14 +174,14 @@ if (doList) {
 // Filter skills
 let skillsToInstall = [];
 if (targetSkill === 'all') {
-  skillsToInstall = discoveredSkills;
+  skillsToInstall = registrySkills;
 } else {
   const requested = targetSkill.split(',').map((s) => s.trim());
   for (const r of requested) {
-    if (discoveredSkills.includes(r)) {
+    if (skillsMap.has(r)) {
       skillsToInstall.push(r);
     } else {
-      console.warn(`${c.yellow}Warning: Skill '${r}' not found. Skipping.${c.reset}`);
+      console.warn(`${c.yellow}Warning: Skill '${r}' not found in registry. Skipping.${c.reset}`);
     }
   }
 }
@@ -253,41 +280,81 @@ function getTargetDirs(cli, scopeMode, skill) {
 
 let successCount = 0;
 let errorCount = 0;
+const tempDirsToClean = [];
 
-for (const skill of skillsToInstall) {
-  const skillSrcDir = path.join(sourceDir, skill);
-  console.log(`${c.cyan}>> Processing skill: ${c.bold}${skill}${c.reset}`);
+try {
+  for (const skill of skillsToInstall) {
+    const meta = skillsMap.get(skill);
+    let skillSrcDir = meta.localPath;
 
-  for (const cli of selectedClis) {
-    const rawPaths = getTargetDirs(cli, scope, skill);
-    const uniquePaths = [...new Set(rawPaths)];
+    console.log(`${c.cyan}>> Processing skill: ${c.bold}${skill}${c.reset}`);
 
-    for (const dest of uniquePaths) {
-      try {
-        if (doUninstall) {
-          if (cli === 'cursor') {
-            const ruleFile = path.join(dest, `${skill}.mdc`);
-            if (fs.existsSync(ruleFile)) {
-              fs.unlinkSync(ruleFile);
-              console.log(`   ${c.yellow}[-] Removed Cursor rule: ${ruleFile}${c.reset}`);
-              successCount++;
+    // If uninstalling, we don't need the source files
+    if (doUninstall) {
+      for (const cli of selectedClis) {
+        const rawPaths = getTargetDirs(cli, scope, skill);
+        const uniquePaths = [...new Set(rawPaths)];
+
+        for (const dest of uniquePaths) {
+          try {
+            if (cli === 'cursor') {
+              const ruleFile = path.join(dest, `${skill}.mdc`);
+              if (fs.existsSync(ruleFile)) {
+                fs.unlinkSync(ruleFile);
+                console.log(`   ${c.yellow}[-] Removed Cursor rule: ${ruleFile}${c.reset}`);
+                successCount++;
+              }
+            } else if (cli === 'windsurf') {
+              const ruleFile = path.join(dest, `${skill}.md`);
+              if (fs.existsSync(ruleFile)) {
+                fs.unlinkSync(ruleFile);
+                console.log(`   ${c.yellow}[-] Removed Windsurf rule: ${ruleFile}${c.reset}`);
+                successCount++;
+              }
+            } else {
+              if (fs.existsSync(dest)) {
+                fs.rmSync(dest, { recursive: true, force: true });
+                console.log(`   ${c.yellow}[-] Removed skill directory: ${dest} (${cli})${c.reset}`);
+                successCount++;
+              }
             }
-          } else if (cli === 'windsurf') {
-            const ruleFile = path.join(dest, `${skill}.md`);
-            if (fs.existsSync(ruleFile)) {
-              fs.unlinkSync(ruleFile);
-              console.log(`   ${c.yellow}[-] Removed Windsurf rule: ${ruleFile}${c.reset}`);
-              successCount++;
-            }
-          } else {
-            if (fs.existsSync(dest)) {
-              fs.rmSync(dest, { recursive: true, force: true });
-              console.log(`   ${c.yellow}[-] Removed skill directory: ${dest} (${cli})${c.reset}`);
-              successCount++;
-            }
+          } catch (err) {
+            console.error(`   ${c.red}[!] Error removing ${dest} (${cli}): ${err.message}${c.reset}`);
+            errorCount++;
           }
-        } else {
-          // Install
+        }
+      }
+      continue;
+    }
+
+    // If source doesn't exist locally, fetch repository
+    if (!skillSrcDir || !fs.existsSync(skillSrcDir)) {
+      if (meta.gitUrl) {
+        console.log(`   ${c.gray}[i] Fetching skill from ${meta.gitUrl}...${c.reset}`);
+        const tempTarget = path.join(os.tmpdir(), `skill-${skill}-${Date.now()}`);
+        tempDirsToClean.push(tempTarget);
+        try {
+          execSync(`git clone --depth 1 ${meta.gitUrl} "${tempTarget}"`, { stdio: 'ignore' });
+          skillSrcDir = tempTarget;
+        } catch (err) {
+          console.error(`   ${c.red}[!] Failed to clone repository: ${err.message}${c.reset}`);
+          errorCount++;
+          continue;
+        }
+      } else {
+        console.error(`   ${c.red}[!] No local source or git URL found for ${skill}.${c.reset}`);
+        errorCount++;
+        continue;
+      }
+    }
+
+    // Install to targets
+    for (const cli of selectedClis) {
+      const rawPaths = getTargetDirs(cli, scope, skill);
+      const uniquePaths = [...new Set(rawPaths)];
+
+      for (const dest of uniquePaths) {
+        try {
           if (cli === 'cursor') {
             fs.mkdirSync(dest, { recursive: true });
             const ruleFile = path.join(dest, `${skill}.mdc`);
@@ -312,12 +379,20 @@ for (const skill of skillsToInstall) {
             console.log(`   ${c.green}[+] Installed for ${cli} ->${c.reset} ${dest}`);
             successCount++;
           }
+        } catch (err) {
+          console.error(`   ${c.red}[!] Error on ${dest} (${cli}): ${err.message}${c.reset}`);
+          errorCount++;
         }
-      } catch (err) {
-        console.error(`   ${c.red}[!] Error on ${dest} (${cli}): ${err.message}${c.reset}`);
-        errorCount++;
       }
     }
+  }
+} finally {
+  for (const t of tempDirsToClean) {
+    try {
+      if (fs.existsSync(t)) {
+        fs.rmSync(t, { recursive: true, force: true });
+      }
+    } catch {}
   }
 }
 
@@ -325,12 +400,8 @@ console.log(`\n${c.cyan}========================================================
 if (doUninstall) {
   console.log(`${c.green}${c.bold}Uninstall completed! (${successCount} locations updated, ${errorCount} errors)${c.reset}`);
 } else {
-  console.log(`${c.green}${c.bold}Installation completed successfully! (${successCount} locations configured, ${errorCount} errors)${c.reset}\n`);
-  console.log(`${c.bold}How to verify and use:${c.reset}`);
-  console.log(`  * ${c.cyan}Claude Code:${c.reset} Run 'claude' - active automatically from ~/.claude/skills and ~/.agents/skills.`);
-  console.log(`  * ${c.cyan}OpenCode:${c.reset} Run 'opencode' - detected from ~/.opencode/skills and ~/.agents/skills.`);
-  console.log(`  * ${c.cyan}Antigravity CLI:${c.reset} Run 'agy' - detected from ~/.gemini/antigravity-cli/skills/ and ~/.agents/skills/.`);
-  console.log(`  * ${c.cyan}Cursor:${c.reset} Rules active via .cursor/rules/.`);
-  console.log(`  * ${c.cyan}Vibe Coding:${c.reset} Prompt: "Audit and optimize this website to 100/100 PageSpeed using the alexlivre skill"`);
+  console.log(`${c.green}${c.bold}Installation completed! (${successCount} locations configured, ${errorCount} errors)${c.reset}\n`);
+  console.log(`${c.bold}Direct ecosystem install alternative:${c.reset}`);
+  console.log(`  ${c.cyan}npx skills add alexlivre/pagespeed-optimizer-alexlivre -g -y${c.reset}\n`);
 }
 console.log(`${c.cyan}=========================================================${c.reset}\n`);

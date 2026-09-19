@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Universal Installer for Alex Santos (@alexlivre) AI Agent Skills.
+    Universal Installer & Registry Query for Alex Santos (@alexlivre) AI Agent Skills.
     Supports Windows (PowerShell 5.1+ / PowerShell 7+).
 
 .DESCRIPTION
@@ -29,7 +29,7 @@
     Removes the specified skill(s) from target CLIs.
 
 .PARAMETER List
-    Lists available skills in this repository and supported CLIs.
+    Lists available skills in this registry and supported CLIs.
 
 .EXAMPLE
     # One-liner remote installation from GitHub
@@ -40,8 +40,8 @@
     .\install.ps1
 
 .EXAMPLE
-    # Local install to current project for Claude Code and OpenCode
-    .\install.ps1 -Project -Cli claude,opencode
+    # List skills in central catalog
+    .\install.ps1 -List
 #>
 
 [CmdletBinding()]
@@ -58,14 +58,13 @@ param(
 $ErrorActionPreference = "Stop"
 
 $RepoUrl = "https://github.com/alexlivre/skills-alexlivre"
-$ZipUrl  = "https://github.com/alexlivre/skills-alexlivre/archive/refs/heads/main.zip"
 
 function Show-Banner {
     Write-Host ""
     Write-Host " ========================================================= " -ForegroundColor Cyan
-    Write-Host "   Alex Santos (@alexlivre) - AI Agent Skills Installer    " -ForegroundColor Green
+    Write-Host "   Alex Santos (@alexlivre) - AI Agent Skills Hub          " -ForegroundColor Green
     Write-Host " ========================================================= " -ForegroundColor Cyan
-    Write-Host "   Repo: $RepoUrl" -ForegroundColor DarkGray
+    Write-Host "   Central Hub: $RepoUrl" -ForegroundColor DarkGray
     Write-Host ""
 }
 
@@ -83,9 +82,9 @@ function Show-HelpMessage {
     Write-Host "  -Help                Show this help message"
     Write-Host ""
     Write-Host "Examples:" -ForegroundColor White
-    Write-Host "  irm https://raw.githubusercontent.com/alexlivre/skills-alexlivre/main/install.ps1 | iex" -ForegroundColor DarkCyan
-    Write-Host "  .\install.ps1 -Project" -ForegroundColor DarkCyan
-    Write-Host "  .\install.ps1 -Cli claude,antigravity -Skill pagespeed-optimizer-alexlivre" -ForegroundColor DarkCyan
+    Write-Host "  .\install.ps1 -List" -ForegroundColor DarkCyan
+    Write-Host "  .\install.ps1 -Skill pagespeed-optimizer-alexlivre" -ForegroundColor DarkCyan
+    Write-Host "  .\install.ps1 -Project -Cli claude,antigravity" -ForegroundColor DarkCyan
     Write-Host ""
 }
 
@@ -106,71 +105,81 @@ if (-not $ScriptDir) {
     $ScriptDir = Get-Location
 }
 
-$IsLocalRepo = $false
-$SkillsSourceDir = $ScriptDir
+# Load registry.json if available
+$RegistryFile = Join-Path $ScriptDir "registry.json"
+$RegistrySkills = @()
+if (Test-Path $RegistryFile) {
+    try {
+        $RegData = Get-Content $RegistryFile -Raw | ConvertFrom-Json
+        if ($RegData.skills) {
+            $RegistrySkills = $RegData.skills
+        }
+    } catch {
+        Write-Warning "Could not parse registry.json: $_"
+    }
+}
 
-# Check if current directory or script directory has skills
+# Check for local skill directories
 $DetectedSkills = @()
 if (Test-Path $ScriptDir) {
     $PotentialSkills = Get-ChildItem -Path $ScriptDir -Directory | Where-Object {
         Test-Path (Join-Path $_.FullName "SKILL.md")
     }
-    if ($PotentialSkills.Count -gt 0) {
-        $IsLocalRepo = $true
-        $DetectedSkills = $PotentialSkills
+    foreach ($ps in $PotentialSkills) {
+        $DetectedSkills += [PSCustomObject]@{
+            Name           = $ps.Name
+            Description    = "Local AI Agent Skill"
+            LocalPath      = $ps.FullName
+            Repo           = $null
+            InstallCommand = "npx skills add alexlivre/$($ps.Name) -g -y"
+            Category       = "Local"
+            ZipUrl         = $null
+            GitUrl         = $null
+        }
     }
 }
 
-$TempDir = $null
-
-if (-not $IsLocalRepo) {
-    Write-Host " [i] Remote / Standalone mode detected. Fetching latest skills from GitHub..." -ForegroundColor Cyan
-    $TempDir = Join-Path ([System.IO.Path]::GetTempPath()) ("skills-alexlivre-" + [System.Guid]::NewGuid().ToString("N"))
-    New-Item -ItemType Directory -Path $TempDir -Force | Out-Null
-    $ZipPath = Join-Path $TempDir "repo.zip"
-
-    try {
-        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12 -bor [System.Net.SecurityProtocolType]::Tls13
-        Invoke-WebRequest -Uri $ZipUrl -OutFile $ZipPath -UseBasicParsing
-        Expand-Archive -Path $ZipPath -DestinationPath $TempDir -Force
-        
-        $ExtractedRoot = Join-Path $TempDir "skills-alexlivre-main"
-        if (Test-Path $ExtractedRoot) {
-            $SkillsSourceDir = $ExtractedRoot
-        } else {
-            $SkillsSourceDir = $TempDir
-        }
-
-        $DetectedSkills = Get-ChildItem -Path $SkillsSourceDir -Directory | Where-Object {
-            Test-Path (Join-Path $_.FullName "SKILL.md")
+# Merge registry skills
+foreach ($reg in $RegistrySkills) {
+    $existing = $DetectedSkills | Where-Object { $_.Name -eq $reg.name }
+    if (-not $existing) {
+        $DetectedSkills += [PSCustomObject]@{
+            Name           = $reg.name
+            Description    = $reg.description
+            LocalPath      = $null
+            Repo           = $reg.repo
+            InstallCommand = $reg.installCommand
+            Category       = $reg.category
+            ZipUrl         = $reg.zipUrl
+            GitUrl         = $reg.gitUrl
         }
     }
-    catch {
-        Write-Error "Failed to download repository: $_"
-        if ($TempDir -and (Test-Path $TempDir)) {
-            Remove-Item -Recurse -Force $TempDir -ErrorAction SilentlyContinue
-        }
-        exit 1
-    }
+}
+
+if ($DetectedSkills.Count -eq 0) {
+    Write-Error "No skills found in registry or local directory."
+    exit 1
 }
 
 if ($List) {
     Show-Banner
-    Write-Host "Discovered Skills in Repository:" -ForegroundColor Green
-    foreach ($sk in $DetectedSkills) {
-        $skillMd = Join-Path $sk.FullName "SKILL.md"
-        $desc = "AI Agent Skill"
-        if (Test-Path $skillMd) {
-            $content = Get-Content $skillMd -Raw
-            if ($content -match "description:\s*(.+)") {
-                $desc = $matches[1].Trim()
-                if ($desc.Length -gt 80) { $desc = $desc.Substring(0, 77) + "..." }
-            }
-        }
-        Write-Host "  - $($sk.Name)" -ForegroundColor Yellow -NoNewline
-        Write-Host " : $desc" -ForegroundColor DarkGray
-    }
+    Write-Host "Centralized Skills in Ecosystem:" -ForegroundColor Green
     Write-Host ""
+    foreach ($sk in $DetectedSkills) {
+        Write-Host "  - $($sk.Name)" -ForegroundColor Yellow -NoNewline
+        if ($sk.Category) {
+            Write-Host " [$($sk.Category)]" -ForegroundColor Cyan -NoNewline
+        }
+        Write-Host ""
+        Write-Host "    $($sk.Description)" -ForegroundColor DarkGray
+        if ($sk.Repo) {
+            Write-Host "    Repository : $($sk.Repo)" -ForegroundColor Cyan
+        }
+        if ($sk.InstallCommand) {
+            Write-Host "    Quick Add  : $($sk.InstallCommand)" -ForegroundColor Green
+        }
+        Write-Host ""
+    }
     Write-Host "Supported CLIs and Vibe Coding Tools:" -ForegroundColor Green
     Write-Host "  - agents       Universal Agent Skills specification (~/.agents/skills/)"
     Write-Host "  - claude       Claude Code (~/.claude/skills/ and ~/.agents/skills/)"
@@ -181,9 +190,6 @@ if ($List) {
     Write-Host "  - roo          Roo Code / Cline (~/.roo/skills/)"
     Write-Host "  - all          All supported tools simultaneously (default)"
     Write-Host ""
-    if ($TempDir -and (Test-Path $TempDir)) {
-        Remove-Item -Recurse -Force $TempDir -ErrorAction SilentlyContinue
-    }
     exit 0
 }
 
@@ -217,16 +223,13 @@ if ($FlattenedSkills -contains "all") {
         if ($matched) {
             $SkillsToInstall += $matched
         } else {
-            Write-Warning "Skill '$sName' not found in repository. Skipping."
+            Write-Warning "Skill '$sName' not found in registry. Skipping."
         }
     }
 }
 
 if ($SkillsToInstall.Count -eq 0) {
-    Write-Error "No matching skills found to install."
-    if ($TempDir -and (Test-Path $TempDir)) {
-        Remove-Item -Recurse -Force $TempDir -ErrorAction SilentlyContinue
-    }
+    Write-Error "No matching skills found to process."
     exit 1
 }
 
@@ -286,7 +289,6 @@ function Get-TargetDirectories {
             }
         }
         "cursor" {
-            # Cursor rules are handled separately
             if ($Scope -eq "global") {
                 $paths += (Join-Path $UserHome ".cursor\rules")
             } else {
@@ -294,7 +296,6 @@ function Get-TargetDirectories {
             }
         }
         "windsurf" {
-            # Windsurf rules
             if ($Scope -eq "global") {
                 $paths += (Join-Path $UserHome ".codeium\windsurf\memories")
             } else {
@@ -325,35 +326,97 @@ if ($FlattenedClis -contains "all") {
 Show-Banner
 Write-Host " Scope: " -NoNewline; Write-Host $InstallScope.ToUpper() -ForegroundColor Yellow
 Write-Host " Selected CLIs: " -NoNewline; Write-Host ($SelectedClis -join ", ") -ForegroundColor Cyan
-Write-Host " Skills to process: " -NoNewline; Write-Host (($SkillsToInstall | ForEach-Object { $_.Name }) -join ", ") -ForegroundColor Green
+Write-Host " Skills: " -NoNewline; Write-Host (($SkillsToInstall | ForEach-Object { $_.Name }) -join ", ") -ForegroundColor Green
 Write-Host ""
 
 $SuccessCount = 0
 $FailedCount = 0
+$TempDirsToClean = @()
 
-foreach ($skillDir in $SkillsToInstall) {
-    $skillName = $skillDir.Name
-    Write-Host ">> Processing skill: $skillName" -ForegroundColor Cyan
+try {
+    foreach ($skItem in $SkillsToInstall) {
+        $skillName = $skItem.Name
+        Write-Host ">> Processing skill: $skillName" -ForegroundColor Cyan
 
-    foreach ($cliName in $SelectedClis) {
-        $targetPaths = Get-TargetDirectories -CliName $cliName -Scope $InstallScope -SkillName $skillName
-
-        foreach ($dest in $targetPaths) {
-            try {
-                if ($Uninstall) {
-                    if (Test-Path $dest) {
-                        Remove-Item -Path $dest -Recurse -Force
-                        Write-Host "   [-] Uninstalled from: $dest ($cliName)" -ForegroundColor DarkYellow
-                        $SuccessCount++
+        # If uninstalling
+        if ($Uninstall) {
+            foreach ($cliName in $SelectedClis) {
+                $targetPaths = Get-TargetDirectories -CliName $cliName -Scope $InstallScope -SkillName $skillName
+                foreach ($dest in $targetPaths) {
+                    try {
+                        if ($cliName -eq "cursor") {
+                            $ruleFile = Join-Path $dest "$skillName.mdc"
+                            if (Test-Path $ruleFile) {
+                                Remove-Item -Path $ruleFile -Force
+                                Write-Host "   [-] Removed Cursor rule: $ruleFile" -ForegroundColor DarkYellow
+                                $SuccessCount++
+                            }
+                        } elseif ($cliName -eq "windsurf") {
+                            $ruleFile = Join-Path $dest "$skillName.md"
+                            if (Test-Path $ruleFile) {
+                                Remove-Item -Path $ruleFile -Force
+                                Write-Host "   [-] Removed Windsurf rule: $ruleFile" -ForegroundColor DarkYellow
+                                $SuccessCount++
+                            }
+                        } else {
+                            if (Test-Path $dest) {
+                                Remove-Item -Path $dest -Recurse -Force
+                                Write-Host "   [-] Uninstalled from: $dest ($cliName)" -ForegroundColor DarkYellow
+                                $SuccessCount++
+                            }
+                        }
+                    } catch {
+                        Write-Host "   [!] Error removing $dest for $cliName : $_" -ForegroundColor Red
+                        $FailedCount++
                     }
-                } else {
+                }
+            }
+            continue
+        }
+
+        # Resolve skill source directory
+        $resolvedSource = $skItem.LocalPath
+        if (-not $resolvedSource -or -not (Test-Path $resolvedSource)) {
+            if ($skItem.ZipUrl) {
+                Write-Host "   [i] Fetching skill from GitHub: $($skItem.ZipUrl)" -ForegroundColor DarkGray
+                $skillTemp = Join-Path ([System.IO.Path]::GetTempPath()) ("skill-" + $skillName + "-" + [System.Guid]::NewGuid().ToString("N"))
+                New-Item -ItemType Directory -Path $skillTemp -Force | Out-Null
+                $TempDirsToClean += $skillTemp
+                $zipFile = Join-Path $skillTemp "skill.zip"
+                
+                try {
+                    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12 -bor [System.Net.SecurityProtocolType]::Tls13
+                    Invoke-WebRequest -Uri $skItem.ZipUrl -OutFile $zipFile -UseBasicParsing
+                    Expand-Archive -Path $zipFile -DestinationPath $skillTemp -Force
+                    $extracted = Get-ChildItem -Path $skillTemp -Directory | Select-Object -First 1
+                    if ($extracted) {
+                        $resolvedSource = $extracted.FullName
+                    } else {
+                        $resolvedSource = $skillTemp
+                    }
+                } catch {
+                    Write-Host "   [!] Failed to download skill: $_" -ForegroundColor Red
+                    $FailedCount++
+                    continue
+                }
+            } else {
+                Write-Host "   [!] No local directory or remote URL found for $skillName" -ForegroundColor Red
+                $FailedCount++
+                continue
+            }
+        }
+
+        foreach ($cliName in $SelectedClis) {
+            $targetPaths = Get-TargetDirectories -CliName $cliName -Scope $InstallScope -SkillName $skillName
+
+            foreach ($dest in $targetPaths) {
+                try {
                     if ($cliName -eq "cursor") {
-                        # Create Cursor .mdc rule
                         if (-not (Test-Path $dest)) {
                             New-Item -ItemType Directory -Path $dest -Force | Out-Null
                         }
                         $ruleFile = Join-Path $dest "$skillName.mdc"
-                        $skillMdPath = Join-Path $skillDir.FullName "SKILL.md"
+                        $skillMdPath = Join-Path $resolvedSource "SKILL.md"
                         $skillContent = ""
                         if (Test-Path $skillMdPath) {
                             $skillContent = Get-Content $skillMdPath -Raw
@@ -368,7 +431,7 @@ foreach ($skillDir in $SkillsToInstall) {
                             New-Item -ItemType Directory -Path $dest -Force | Out-Null
                         }
                         $ruleFile = Join-Path $dest "$skillName.md"
-                        $skillMdPath = Join-Path $skillDir.FullName "SKILL.md"
+                        $skillMdPath = Join-Path $resolvedSource "SKILL.md"
                         if (Test-Path $skillMdPath) {
                             Copy-Item -Path $skillMdPath -Destination $ruleFile -Force
                         }
@@ -376,26 +439,28 @@ foreach ($skillDir in $SkillsToInstall) {
                         $SuccessCount++
                     }
                     else {
-                        # Standard skill directory copy
                         if (-not (Test-Path $dest)) {
                             New-Item -ItemType Directory -Path $dest -Force | Out-Null
                         }
-                        Copy-Item -Path (Join-Path $skillDir.FullName "*") -Destination $dest -Recurse -Force
+                        Copy-Item -Path (Join-Path $resolvedSource "*") -Destination $dest -Recurse -Force
                         Write-Host "   [+] Installed for $cliName -> $dest" -ForegroundColor Green
                         $SuccessCount++
                     }
                 }
-            }
-            catch {
-                Write-Host "   [!] Error processing $dest for $cliName : $_" -ForegroundColor Red
-                $FailedCount++
+                catch {
+                    Write-Host "   [!] Error processing $dest for $cliName : $_" -ForegroundColor Red
+                    $FailedCount++
+                }
             }
         }
     }
 }
-
-if ($TempDir -and (Test-Path $TempDir)) {
-    Remove-Item -Recurse -Force $TempDir -ErrorAction SilentlyContinue
+finally {
+    foreach ($td in $TempDirsToClean) {
+        if (Test-Path $td) {
+            Remove-Item -Recurse -Force $td -ErrorAction SilentlyContinue
+        }
+    }
 }
 
 Write-Host ""
@@ -405,12 +470,8 @@ if ($Uninstall) {
 } else {
     Write-Host " Installation completed successfully! ($SuccessCount locations configured, $FailedCount errors)" -ForegroundColor Green
     Write-Host ""
-    Write-Host " How to verify/use:" -ForegroundColor White
-    Write-Host "   * Claude Code: Run 'claude' - skills in ~/.claude/skills and ~/.agents/skills are active automatically."
-    Write-Host "   * OpenCode: Run 'opencode' - detected from ~/.opencode/skills and ~/.agents/skills."
-    Write-Host "   * Antigravity CLI: Run 'agy' - detected from ~/.gemini/antigravity-cli/skills/ and ~/.agents/skills/."
-    Write-Host "   * Cursor: Automatically available in Cursor AI via .cursor/rules/."
-    Write-Host "   * Vibe Coding: Ask your agent: 'Audit and optimize this site to 100/100 PageSpeed using the alexlivre skill'"
+    Write-Host " Direct package manager alternative:" -ForegroundColor White
+    Write-Host "   npx skills add alexlivre/pagespeed-optimizer-alexlivre -g -y" -ForegroundColor Cyan
 }
 Write-Host "=========================================================" -ForegroundColor Cyan
 Write-Host ""

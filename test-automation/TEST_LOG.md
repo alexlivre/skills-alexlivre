@@ -19,3 +19,17 @@
   - Windows PowerShell installer (`install.ps1`): `-List`, `-Help`, `-Project`, `-Uninstall`: 100% PASS.
   - Zero modifications to skill payload (`pagespeed-optimizer-alexlivre/` remains clean).
 
+## 2026-09-19 - Central Hub & Standalone Skill Transition
+
+- **Target**: Central hub migration, removal of embedded `pagespeed-optimizer-alexlivre` directory, `registry.json` validation, and multi-CLI registry installer tests (`test-automation/test-hub.mjs`).
+- **Result**: PASSED
+- **Total Tests**: 16
+- **Passed**: 16
+- **Failed**: 0
+- **Tests Executed**:
+  - Verification that embedded `pagespeed-optimizer-alexlivre/` directory was removed from workspace: PASS
+  - Validation that `registry.json` exists, is valid JSON, and matches schema: PASS
+  - Validation of skill registry metadata (name, category, description, repo URL, quick-add command, active status): PASS
+  - Validation that repository points to dedicated `https://github.com/alexlivre/pagespeed-optimizer-alexlivre`: PASS
+  - Validation of `README.md` links, structure, and documentation updates: PASS
+  - Validation of `install.mjs --list` and `install.ps1 -List` registry discovery: PASS
